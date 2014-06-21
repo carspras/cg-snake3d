@@ -1368,7 +1368,7 @@ bool LoadObjectFile(const std::string& path, std::vector<Vertex>& vertices, std:
 	std::vector<glm::vec2> temp_uvs;
 	std::vector<glm::vec3> temp_normals;
 
-	FILE * file = fopen(path.c_str(), "r");
+	FILE * file = fopen(path.c_str(), "rb");
 	if( file == NULL ){
 		std::cout << "ERROR: cannot open the file\n";
 		return false;
