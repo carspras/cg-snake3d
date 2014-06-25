@@ -1,3 +1,5 @@
+//Snake 3D
+
 #include "framework.h"
 
 struct Material {
