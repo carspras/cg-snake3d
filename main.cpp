@@ -67,6 +67,16 @@ int main(int argc, char** argv)
     snakeTailTransformation.ProjectionMatrix = projectionMatrix;
     snakeTailTransformation.NormalMatrix = snakeTailTransformation.ModelViewMatrix;
 
+	Transformation mouseTransformation;
+	glm::mat4 mouseModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 0.0f, 0.0f)) 
+		* glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f))
+		* glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f))
+		* glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 0.2f, 0.2f));
+
+	mouseTransformation.ModelViewMatrix = viewMatrix * mouseModelMatrix;
+	mouseTransformation.ProjectionMatrix = projectionMatrix;
+	mouseTransformation.NormalMatrix = mouseTransformation.ModelViewMatrix;
+
     // material and transformation ubos
     GLuint ubos[UBO_COUNT];
     glGenBuffers(UBO_COUNT, ubos);
@@ -80,6 +90,12 @@ int main(int argc, char** argv)
     viscg::LoadObject(snakeMeshes[0], "objects/snakehead.obj");
     viscg::LoadObject(snakeMeshes[1], "objects/snakebody.obj");
     viscg::LoadObject(snakeMeshes[2], "objects/snaketail.obj");
+
+	//mouse mesh
+	GLuint mouseMesh[1];
+	viscg::GenMeshes(1, mouseMesh);
+	viscg::LoadObject(mouseMesh[0], "objects/mouse.obj");
+
 
     // snake textures
     GLenum target;
@@ -124,6 +140,11 @@ int main(int argc, char** argv)
         glBufferData(GL_UNIFORM_BUFFER, sizeof(snakeTailTransformation), &snakeTailTransformation, GL_STATIC_DRAW);
         glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORMATIONS_ID, ubos[TRANSFORMATIONS_ID]);
         viscg::DrawMesh(snakeMeshes[2]);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, ubos[TRANSFORMATIONS_ID]);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(mouseTransformation), &mouseTransformation, GL_STATIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORMATIONS_ID, ubos[TRANSFORMATIONS_ID]);
+		viscg::DrawMesh(mouseMesh[0]);
 
         viscg::SwapBuffers();
     }
