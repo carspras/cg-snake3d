@@ -1,4 +1,4 @@
-﻿Der Buildvorgang wurde am 29.06.2014 10:20:30 gestartet.
+﻿Der Buildvorgang wurde am 29.06.2014 10:53:07 gestartet.
      1>Projekt "C:\Users\Carina\Documents\GitHub\cg-snake3d\snake3d.vcxproj" auf Knoten "2", Build Ziel(e).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
@@ -11,4 +11,4 @@
 
 Build erfolgreich.
 
-Verstrichene Zeit 00:00:07.34
+Verstrichene Zeit 00:00:08.04

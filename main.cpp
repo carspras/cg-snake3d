@@ -38,8 +38,8 @@ int main(int argc, char** argv)
     snakeMaterial.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     snakeMaterial.shininess = 7.5f;
 
-    //glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(-1.5f, -0.5f, 0.0f), glm::vec3(1.0f, -0.5f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, -5.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    //glm::mat4 viewMatrix = glm::lookAt(glm::vec3(-1.5f, -0.5f, 0.0f), glm::vec3(1.0f, -0.5f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
     
     glm::mat4 projectionMatrix = glm::perspective(45.0f, static_cast<float>(wd)/static_cast<float>(ht), 0.0f, 100.0f);
 
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     // snake textures
     GLenum target;
-    GLuint textureID = viscg::LoadTexture("objects/snakehead.png", target, true);
+    GLuint textureID = viscg::LoadTexture("objects/mouse.png", target, true);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
