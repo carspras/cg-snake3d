@@ -43,11 +43,6 @@ int main(int argc, char** argv)
         raster.draw(viewMatrix, projectionMatrix);
         snake.draw(viewMatrix, projectionMatrix);
 
-		glBindBuffer(GL_UNIFORM_BUFFER, ubos[TRANSFORMATIONS_ID]);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(mouseTransformation), &mouseTransformation, GL_STATIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORMATIONS_ID, ubos[TRANSFORMATIONS_ID]);
-		viscg::DrawMesh(mouseMesh[0]);
-
         viscg::SwapBuffers();
     }
     return 0;

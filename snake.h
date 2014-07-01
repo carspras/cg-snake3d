@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "raster.h"
+#include "mouse.h"
 #include <deque>
 
 struct Transformation {
@@ -53,14 +54,17 @@ private:
     glm::vec3 up;
 
     Raster* raster;
+    Mouse mouse;
     glm::mat4 modelMatrix;
 
     GLuint programID;
     GLuint meshes[4];
     GLuint transformationsUBOID;
     GLint transformationsBlockIndex;
-    GLuint textureID;
-    GLenum textureTarget;
+    GLuint snakeTextureID;
+    GLenum snakeTextureTarget;
+    GLuint mouseTextureID;
+    GLenum mouseTextureTarget;
     GLuint textureLocation;
 
     void loadObjects();

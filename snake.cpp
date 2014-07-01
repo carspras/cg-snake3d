@@ -4,6 +4,7 @@ const int TRANSFORMATIONS_ID = 0;
 
 Snake::Snake(Raster* raster) {
     this->raster = raster;
+    mouse.position = glm::ivec3(4, 5, 2);
     up = glm::vec3(0.0f, 1.0f, 0.0f);
 
     programID = viscg::LoadSimpleProgram("shader/snake.vs.glsl", "shader/snake.fs.glsl");
@@ -47,7 +48,7 @@ void Snake::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
     glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORMATIONS_ID, transformationsUBOID);
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(textureTarget, textureID);
+    glBindTexture(snakeTextureTarget, snakeTextureID);
     glUniform1i(textureLocation, 0);
 
     Transformation transformation;
@@ -68,6 +69,26 @@ void Snake::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
 
         viscg::DrawMesh(meshes[part.type]);
     }
+
+    // mouse zeichnen
+    transformation.ModelViewMatrix = modelMatrix;
+    transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), raster->getPosition(mouse.position))
+        * glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f))
+        * transformation.ModelViewMatrix;
+
+    transformation.ModelViewMatrix = viewMatrix * transformation.ModelViewMatrix;
+    transformation.ProjectionMatrix = projectionMatrix;
+    transformation.NormalMatrix = transformation.ModelViewMatrix;
+
+    glBindBuffer(GL_UNIFORM_BUFFER, transformationsUBOID);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(transformation), &transformation, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORMATIONS_ID, transformationsUBOID);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(mouseTextureTarget, mouseTextureID);
+    glUniform1i(textureLocation, 0);
+
+    viscg::DrawMesh(meshes[4]);
 }
 
 glm::mat4 Snake::getViewMatrix() {
@@ -110,7 +131,10 @@ glm::mat4 Snake::getViewMatrix() {
 }
 
 void Snake::loadTexture() {
-    textureID = viscg::LoadTexture("objects/snakehead.png", textureTarget, true);
+    glUseProgram(programID);
+    snakeTextureID = viscg::LoadTexture("objects/snakehead.png", snakeTextureTarget, true);
+    mouseTextureID = viscg::LoadTexture("objects/mouse.png", mouseTextureTarget, true);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -120,11 +144,12 @@ void Snake::loadTexture() {
 }
 
 void Snake::loadObjects() {
-    viscg::GenMeshes(4, meshes);
+    viscg::GenMeshes(5, meshes);
     viscg::LoadObject(meshes[0], "objects/snakehead.obj");
     viscg::LoadObject(meshes[1], "objects/snakebody.obj");
     viscg::LoadObject(meshes[2], "objects/snakecurve.obj");   
     viscg::LoadObject(meshes[3], "objects/snaketail.obj");
+    viscg::LoadObject(meshes[4], "objects/mouse.obj");
 }
 
 glm::mat4 Snake::rotatePart(SnakePart* part) {
