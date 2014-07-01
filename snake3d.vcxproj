@@ -13,13 +13,19 @@
   <ItemGroup>
     <ClCompile Include="framework.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="raster.cpp" />
+    <ClCompile Include="snake.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="raster.h" />
+    <ClInclude Include="snake.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader/main.fs.glsl" />
-    <None Include="shader/main.vs.glsl" />
+    <None Include="shader\raster.fs.glsl" />
+    <None Include="shader\raster.vs.glsl" />
+    <None Include="shader\snake.fs.glsl" />
+    <None Include="shader\snake.vs.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B0F9684D-8A6F-4886-89C3-EEBFDBC93929}</ProjectGuid>
