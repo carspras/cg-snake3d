@@ -165,6 +165,14 @@ void Raster::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
     glDrawElements(GL_TRIANGLES, voxelIndices.size(), GL_UNSIGNED_INT, 0);
 }
 
+bool Raster::isOutOfBounds(glm::ivec3 voxel) {
+    if (voxel.x < 0 || voxel.x >= static_cast<int>(voxelsPerLine) ||
+        voxel.y < 0 || voxel.y >= static_cast<int>(voxelsPerLine) ||
+        voxel.z < 0 || voxel.z >= static_cast<int>(voxelsPerLine))
+        return true;
+    return false;
+}
+
 bool Raster::activateVoxel(glm::ivec3 voxel) {
     // Prüfen, ob der übergebene Voxel innerhalb des Rasters liegt
     if (voxel.x > static_cast<int>(voxelsPerLine) || voxel.y > static_cast<int>(voxelsPerLine) ||

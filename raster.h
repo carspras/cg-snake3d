@@ -21,6 +21,7 @@ public:
     Raster(unsigned int width, unsigned int voxelsPerLine);
 
     void draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+    bool isOutOfBounds(glm::ivec3 voxel);
     bool activateVoxel(glm::ivec3 voxel);
     bool activateVoxel(glm::vec3 position);
     bool deactivateVoxel(glm::ivec3 voxel);
