@@ -61,8 +61,10 @@ private:
     GLuint meshes[4];
     GLuint transformationsUBOID;
     GLint transformationsBlockIndex;
-    GLuint snakeTextureID;
-    GLenum snakeTextureTarget;
+    GLuint snakeheadTextureID;
+    GLenum snakeheadTextureTarget;
+	GLuint snakebodyTextureID;
+	GLenum snakebodyTextureTarget;
     GLuint mouseTextureID;
     GLenum mouseTextureTarget;
     GLuint textureLocation;

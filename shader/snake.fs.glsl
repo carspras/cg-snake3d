@@ -12,5 +12,5 @@ uniform sampler2D basic_texture;
 
 // main entry point for the fragment shader
 void main() {
-	outColor = texture(basic_texture, texture_coordinates);
+	outColor = texture(basic_texture, vec2(texture_coordinates.x,(1.0f-texture_coordinates.y)));
 }

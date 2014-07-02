@@ -23,8 +23,8 @@ int main(int argc, char** argv)
     Raster raster(RASTER_WIDTH, VOXELS_PER_LINE);
     Snake snake(&raster);
     
-    //glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    //glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     
     glm::mat4 projectionMatrix = glm::perspective(45.0f, static_cast<float>(wd)/static_cast<float>(ht), 0.001f, 100.0f);
 
