@@ -77,6 +77,12 @@ public:
     *   of the head.
     */
     glm::mat4 getViewMatrix();
+
+	/**
+	*	sets mouse position new at a random point
+	*/
+	void Snake::SetMouseRandomly();
+
 private:
     /**
     *   Parts of the snake. First part should be a head, last part a tail.
@@ -141,6 +147,14 @@ private:
     *   Loads the textures for all snake parts and the mouse.
     */
     void loadTexture();
+
+
+	/**
+	*   checks if any part of the snake body is at a given position
+	*/
+	bool IsAtPosition(glm::ivec3 position);
+
+
 
     glm::mat4 rotatePart(SnakePart* part);
     void drawMesh(Transformation transformation, glm::mat4 projectionMatrix, int mesh);

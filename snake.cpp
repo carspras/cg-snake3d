@@ -4,8 +4,8 @@ const int TRANSFORMATIONS_ID = 0;
 
 Snake::Snake(Raster* raster) {
     this->raster = raster;
-    mouse.position = glm::ivec3(4, 5, 2);
-    headPosition = raster->getPosition(glm::ivec3(4,4,4));
+    //mouse.position = glm::ivec3(4, 5, 2);
+	headPosition = raster->getPosition(glm::ivec3(4,4,4));
     headUp = glm::vec3(0.0f, 1.0f, 0.0f);
     upDirection = PosY;
     headAngle = 0.0f;
@@ -50,6 +50,8 @@ Snake::Snake(Raster* raster) {
     parts.push_back(SnakePart(CORNER, glm::ivec3(2, 4, 0), NegY, PosX));
     parts.push_back(SnakePart(BODY, glm::ivec3(3, 4, 0), NegX, PosX));
     parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 0), NegX, PosX));
+
+	SetMouseRandomly();
 }
 
 void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
@@ -199,19 +201,19 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     }
     parts.push_front(head);
 
-    /*
-    // draw mouse
-    transformation.ModelViewMatrix = modelMatrix;
-    transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), raster->getPosition(mouse.position))
-        * glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f))
-        * transformation.ModelViewMatrix;
+    
+    //// draw mouse
+    //transformation.ModelViewMatrix = modelMatrix;
+    //transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), raster->getPosition(mouse.position))
+    //    * glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f))
+    //    * transformation.ModelViewMatrix;
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(mouseTextureTarget, mouseTextureID);
-    glUniform1i(textureLocation, 0);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(mouseTextureTarget, mouseTextureID);
+    //glUniform1i(textureLocation, 0);
 
-    drawMesh(transformation, projectionMatrix, 4);
-    */
+    //drawMesh(transformation, projectionMatrix, 4);
+    
 }
 
 void Snake::move(Direction direction) {
@@ -643,4 +645,35 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
     default:
         return forward;
     }
+}
+
+bool Snake::IsAtPosition(glm::ivec3 position){
+
+	std::deque<SnakePart>::iterator it = parts.begin();
+
+	while (it != parts.end()){
+		SnakePart current = *it++;
+		if (position == current.position) return true;
+	}
+
+	return false;
+}
+
+void Snake::SetMouseRandomly(){
+
+	int x, y, z;
+	float f;
+	bool snakeposition = true;
+
+	while (snakeposition){
+
+		x = rand() % (raster->getVoxelsPerLine()+1);
+		y = rand() % (raster->getVoxelsPerLine()+1);
+		z = rand() % (raster->getVoxelsPerLine()+1);
+
+		snakeposition = IsAtPosition(glm::ivec3(x, y, z));
+	}
+
+	mouse.position = glm::ivec3(x, y, z);
+
 }

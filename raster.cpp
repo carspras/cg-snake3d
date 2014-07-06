@@ -213,6 +213,10 @@ float Raster::getVoxelWidth() {
     return voxelWidth;
 }
 
+int Raster::getVoxelsPerLine() {
+	return voxelsPerLine;
+}
+
 glm::ivec3 Raster::calculateVoxel(glm::vec3 position) {
     unsigned int x = static_cast<int>(position.x / voxelWidth);
     unsigned int y = static_cast<int>(position.y / voxelWidth);

@@ -29,6 +29,7 @@ public:
 
     glm::vec3 getPosition(glm::ivec3 voxel);
     float getVoxelWidth();
+	int getVoxelsPerLine();
 private:
     std::vector<glm::vec3> raster;
     std::set<glm::ivec3, ivec3_compare> activatedVoxels;
