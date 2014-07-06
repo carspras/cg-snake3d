@@ -30,27 +30,27 @@ Snake::Snake(Raster* raster) {
     loadTexture();
     
     // Test-Schlange
-    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 4), NegZ, PosZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 4, 5), NegZ, PosZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 4, 6), NegZ, NegY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 3, 6), PosY, NegY));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 2, 6), PosY, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 6), NegX, PosX));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 6), NegX, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 5), PosZ, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 4), PosZ, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 3), PosZ, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 2), PosZ, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 1), PosZ, NegZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 0), PosZ, NegX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 0), PosX, NegX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 2, 0), PosX, NegX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(3, 2, 0), PosX, NegX));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 2, 0), PosX, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(2, 3, 0), NegY, PosY));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 4, 0), NegY, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(3, 4, 0), NegX, PosX));
-    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 0), NegX, PosX));
+    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 4), NegZ, PosZ, PosY));
+    parts.push_back(SnakePart(BODY, glm::ivec3(4, 4, 5), NegZ, PosZ, PosY));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 4, 6), NegZ, NegY, PosY));
+    parts.push_back(SnakePart(BODY, glm::ivec3(4, 3, 6), PosY, NegY, PosZ));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 2, 6), PosY, PosX, PosZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 6), NegX, PosX, PosZ));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 6), NegX, NegZ, PosZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 5), PosZ, NegZ, PosX));
+    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 4), PosZ, NegZ, PosX));
+    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 3), PosZ, NegZ, PosX));
+    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 2), PosZ, NegZ, PosX));
+    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 1), PosZ, NegZ, PosX));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 0), PosZ, NegX, PosX));
+    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 0), PosX, NegX, NegZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(4, 2, 0), PosX, NegX, NegZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(3, 2, 0), PosX, NegX, NegZ));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 2, 0), PosX, PosY, NegZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(2, 3, 0), NegY, PosY, NegZ));
+    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 4, 0), NegY, PosX, NegZ));
+    parts.push_back(SnakePart(BODY, glm::ivec3(3, 4, 0), NegX, PosX, NegZ));
+    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 0), NegX, PosX, NegZ));
 
 	SetMouseRandomly();
 }
@@ -290,7 +290,6 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     //glUniform1i(textureLocation, 0);
 
     drawMesh(transformation, projectionMatrix, 4);
-    */
 
     // Betreten des nächsten Voxels
     if (!hasEnteredNextVoxel && elapsedTimeSinceLastMove > 0.5f * TIME_PER_MOVE) {
