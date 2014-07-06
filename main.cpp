@@ -32,11 +32,21 @@ int main(int argc, char** argv)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    double previousTime = 0.0f;
+    double previousTime = viscg::ElapsedTime();
+    char keyPressed;
 
     // main rendering loop
     while(viscg::ProcessAllMesages()) { 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (viscg::KeyPressed('w'))
+            snake.navigate(UP);
+        if (viscg::KeyPressed('s'))
+            snake.navigate(DOWN);
+        if (viscg::KeyPressed('a'))
+            snake.navigate(LEFT);
+        if (viscg::KeyPressed('d'))
+            snake.navigate(RIGHT);
 
         double elapsedTimeSinceLastFrame = viscg::ElapsedTime() - previousTime;
         previousTime = viscg::ElapsedTime();

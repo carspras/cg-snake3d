@@ -228,7 +228,7 @@ glm::ivec3 Raster::calculateVoxel(glm::vec3 position) {
 std::vector<unsigned int> Raster::createVoxelIndices() {
     std::vector<unsigned int> voxelIndices;
     
-    for each (glm::ivec3 voxel in activatedVoxels) {
+    for (glm::ivec3 voxel: activatedVoxels) {
         // Indices für die acht Ecken des Voxels ausrechnen
         unsigned int BLB = voxel.z * (voxelsPerLine+1)*(voxelsPerLine+1) + voxel.y * (voxelsPerLine+1) + voxel.x;
         unsigned int BRB = BLB + 1;

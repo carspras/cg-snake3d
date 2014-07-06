@@ -9,7 +9,7 @@
 /**
 * Time in seconds it takes the snake to move one voxel forward.
 */
-const double TIME_PER_MOVE = 5.0f;
+const double TIME_PER_MOVE = 1.0f;
 
 
 struct Transformation {
@@ -47,12 +47,14 @@ struct SnakePart {
     glm::ivec3 position;
     Direction forwardDirection;
     Direction backwardDirection;
+    Direction upDirection;
 
-    SnakePart(SnakeBodyType t, glm::ivec3 pos, Direction forw, Direction back) {
+    SnakePart(SnakeBodyType t, glm::ivec3 pos, Direction forw, Direction back, Direction up) {
         type = t;
         position = pos;
         forwardDirection = forw;
         backwardDirection = back;
+        upDirection = up;
     }
 };
 
@@ -70,7 +72,9 @@ public:
     *   with a body or corner part and adds a new head in the forward direction. Removes the last
     *   part of the snake and replaces the second to last part with a tail. 
     */
-    void move(Direction direction);
+    void move();
+
+    void navigate(RelativeDirection newDirection);
 
     /**
     *   Calculates the correct view-matrix according to the current position and direction
@@ -91,15 +95,16 @@ private:
 
     // current view-matrix
     glm::mat4 viewMatrix;
+    glm::vec3 rotationAxis;
 
     /**
     *   Position of the head at the current frame.
     */
     glm::vec3 headPosition;
+    glm::vec3 headForward;
 
     // current up-vector of the head
     glm::vec3 headUp;
-    Direction upDirection;
 
     // current angle of the head from the original forward-direction
     float headAngle;
@@ -161,7 +166,7 @@ private:
 
     glm::ivec3 directionToVector(Direction direction);
     Direction invertDirection(Direction direction);
-    Direction relativeDirectionToAbsoluteDirection(Direction forward, RelativeDirection relDir);
+    Direction relativeDirectionToAbsoluteDirection(SnakePart* part, RelativeDirection relDir);
 
     void createViewMatrix();
 };

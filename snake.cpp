@@ -4,16 +4,17 @@ const int TRANSFORMATIONS_ID = 0;
 
 Snake::Snake(Raster* raster) {
     this->raster = raster;
-    //mouse.position = glm::ivec3(4, 5, 2);
-	headPosition = raster->getPosition(glm::ivec3(4,4,4));
+    mouse.position = glm::ivec3(4, 5, 2);
+    headPosition = raster->getPosition(glm::ivec3(4,4,4));
+    headForward = glm::vec3(0.0f, 0.0f, -1.0f);
     headUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    upDirection = PosY;
     headAngle = 0.0f;
     hasEnteredNextVoxel = false;
 
-    viewMatrix = glm::lookAt(glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationAxis = headUp;
 
-    newRelativeDirection = RIGHT;
+    newRelativeDirection = FORWARD;
     currentRelativeDirection = FORWARD;
     previousRelativeDirection = FORWARD;
     elapsedTimeSinceLastMove = 0.0f;
@@ -57,19 +58,6 @@ Snake::Snake(Raster* raster) {
 void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     elapsedTimeSinceLastMove += elapsedTime;
     
-    if (!hasEnteredNextVoxel && elapsedTimeSinceLastMove > 0.5f * TIME_PER_MOVE) {
-        previousRelativeDirection = currentRelativeDirection;
-        currentRelativeDirection = newRelativeDirection;
-        newRelativeDirection = FORWARD;
-        hasEnteredNextVoxel = true;
-        headAngle = 0.0f;
-    } else if (elapsedTimeSinceLastMove > TIME_PER_MOVE) {
-        move(NegX);
-        elapsedTimeSinceLastMove = 0.0f;
-        hasEnteredNextVoxel = false;
-        headAngle = 0.0f;
-    }
-
     glUseProgram(programID);
 
     glUniformBlockBinding(programID, transformationsBlockIndex, TRANSFORMATIONS_ID);
@@ -86,10 +74,9 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     glm::mat4 headRotation(1.0f);
     float cos = 0.0f;
 
-    if (elapsedTimeSinceLastMove < 0.5f * TIME_PER_MOVE) {
+    if (elapsedTimeSinceLastMove <= 0.5f * TIME_PER_MOVE) {
         switch (currentRelativeDirection) {
         case FORWARD:
-            // draw head part
             transformation.ModelViewMatrix = rotatePart(&head) * transformation.ModelViewMatrix;
 
             headPosition = raster->getPosition(head.position);
@@ -97,6 +84,8 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
                 * glm::vec3(directionToVector(head.forwardDirection));
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+
+            rotationAxis = headUp;
             break;
         case LEFT:
             headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
@@ -112,12 +101,15 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             headPosition += -sideCorrection * glm::cross(glm::vec3(directionToVector(head.forwardDirection)), headUp);
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+            
+            rotationAxis = headUp;
             break;
         case RIGHT:
             headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
             forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
 
+            
             headRotation = rotatePart(&head);
             headRotation = glm::rotate(glm::mat4(1.0f), headAngle, headUp) * headRotation;
             transformation.ModelViewMatrix = headRotation * transformation.ModelViewMatrix;
@@ -127,10 +119,42 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             headPosition += sideCorrection * glm::cross(glm::vec3(directionToVector(head.forwardDirection)), headUp);
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+
+            rotationAxis = headUp;
             break;
         case UP:
+            headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
+            sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
+
+            rotationAxis = glm::cross(glm::vec3(directionToVector(head.upDirection)), glm::vec3(directionToVector(head.forwardDirection)));
+            headRotation = glm::rotate(glm::mat4(1.0f), headAngle, rotationAxis);
+            headUp = glm::vec3(headRotation * glm::vec4(glm::vec3(directionToVector(head.upDirection)), 1.0f));
+            headRotation = headRotation * rotatePart(&head);
+            transformation.ModelViewMatrix = headRotation * transformation.ModelViewMatrix;
+            
+            headPosition = raster->getPosition(head.position);
+            headPosition += forwardCorrection * glm::vec3(directionToVector(head.forwardDirection));
+            headPosition += sideCorrection * head.upDirection;
+            transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
+                * transformation.ModelViewMatrix;
             break;
         case DOWN:
+            headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
+            sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
+
+            rotationAxis = glm::cross(glm::vec3(directionToVector(head.upDirection)), glm::vec3(directionToVector(head.forwardDirection)));
+            headRotation = glm::rotate(glm::mat4(1.0f), headAngle, rotationAxis);
+            headUp = glm::vec3(headRotation * glm::vec4(glm::vec3(directionToVector(head.upDirection)), 1.0f));
+            headRotation = headRotation * rotatePart(&head);
+            transformation.ModelViewMatrix = headRotation * transformation.ModelViewMatrix;
+
+            headPosition = raster->getPosition(head.position);
+            headPosition += forwardCorrection * glm::vec3(directionToVector(head.forwardDirection));
+            headPosition += sideCorrection * rotationAxis;
+            transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
+                * transformation.ModelViewMatrix;
             break;
         default:
             break;
@@ -138,7 +162,6 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     } else {
         switch (currentRelativeDirection) {
         case FORWARD:
-            // draw head part
             transformation.ModelViewMatrix = rotatePart(&head) * transformation.ModelViewMatrix;
 
             headPosition = raster->getPosition(head.position);
@@ -146,6 +169,8 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
                 * glm::vec3(directionToVector(head.forwardDirection));
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+
+            rotationAxis = headUp;
             break;
         case LEFT:
             headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
@@ -161,6 +186,8 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             headPosition += -sideCorrection * glm::cross(glm::vec3(directionToVector(head.forwardDirection)), headUp);
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+
+            rotationAxis = headUp;
             break;
         case RIGHT:
             headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
@@ -176,22 +203,69 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             headPosition += sideCorrection * glm::cross(glm::vec3(directionToVector(head.forwardDirection)), headUp);
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
+
+            rotationAxis = headUp;
             break;
         case UP:
+            headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            forwardCorrection = static_cast<float>((0.5 * (1 + glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth());
+            sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
+
+            rotationAxis = glm::cross(glm::vec3(directionToVector(head.upDirection)), glm::vec3(directionToVector(head.forwardDirection)));
+            headRotation = glm::rotate(glm::mat4(1.0f), headAngle, rotationAxis);
+            headUp = glm::vec3(headRotation * glm::vec4(glm::vec3(directionToVector(head.upDirection)), 1.0f));
+            headRotation = headRotation * rotatePart(&head);
+            transformation.ModelViewMatrix = headRotation * transformation.ModelViewMatrix;
+
+            headPosition = raster->getPosition(head.position);
+            headPosition += forwardCorrection * glm::vec3(directionToVector(head.forwardDirection));
+            headPosition += sideCorrection * glm::cross(glm::vec3(directionToVector(head.forwardDirection)), headUp);
+            transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
+                * transformation.ModelViewMatrix;
             break;
         case DOWN:
+            headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            forwardCorrection = static_cast<float>((0.5 * (1 + glm::sin(glm::radians(headAngle)))) * raster->getVoxelWidth());
+            sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
+
+            rotationAxis = glm::cross(glm::vec3(directionToVector(head.upDirection)), glm::vec3(directionToVector(head.forwardDirection)));
+            headRotation = glm::rotate(glm::mat4(1.0f), headAngle, rotationAxis);
+            headUp = glm::vec3(headRotation * glm::vec4(glm::vec3(directionToVector(head.upDirection)), 1.0f));
+            headRotation = headRotation * rotatePart(&head);
+            transformation.ModelViewMatrix = headRotation * transformation.ModelViewMatrix;
+
+            headPosition = raster->getPosition(head.position);
+            headPosition += forwardCorrection * glm::vec3(directionToVector(head.forwardDirection));
+            headPosition += sideCorrection * rotationAxis;
+            transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
+                * transformation.ModelViewMatrix;
             break;
         default:
             break;
         }
     }
     
+    headForward = glm::vec3(glm::rotate(glm::mat4(1.0f), headAngle, rotationAxis) 
+                * glm::vec4(glm::vec3(directionToVector(head.forwardDirection)), 1.0f));
     createViewMatrix();
-    drawMesh(transformation, projectionMatrix, TAIL);
+
+    // Head zeichnen
+    drawMesh(transformation, projectionMatrix, HEAD);
+
+    // ersten Teil des Körpers direkt hinter Head zeichnen
+    transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), -raster->getVoxelWidth() * headForward)
+        * transformation.ModelViewMatrix;
+    drawMesh(transformation, projectionMatrix, BODY);
+
+    // Head runternehmen, da der schon gerendert wurde
     parts.pop_front();
 
-    // draw all other parts of the snake
-    for each (SnakePart part in parts){
+    // ersten Teil des Körpers runternehmen, da der auch schon gerendert wurde
+    SnakePart firstBody = parts.front();
+    parts.pop_front();
+
+    // die übrigen Teile der Schlange rendern
+    for (SnakePart part: parts){
         transformation.ModelViewMatrix = modelMatrix;
         transformation.ModelViewMatrix = rotatePart(&part) * transformation.ModelViewMatrix;
         transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), raster->getPosition(part.position))
@@ -199,6 +273,9 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
 
         drawMesh(transformation, projectionMatrix, part.type);
     }
+
+    // erstes Körper-Element und Head wieder hinzufügen
+    parts.push_front(firstBody);
     parts.push_front(head);
 
     
@@ -212,12 +289,28 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     //glBindTexture(mouseTextureTarget, mouseTextureID);
     //glUniform1i(textureLocation, 0);
 
-    //drawMesh(transformation, projectionMatrix, 4);
-    
+    drawMesh(transformation, projectionMatrix, 4);
+    */
+
+    // Betreten des nächsten Voxels
+    if (!hasEnteredNextVoxel && elapsedTimeSinceLastMove > 0.5f * TIME_PER_MOVE) {
+        previousRelativeDirection = currentRelativeDirection;
+        currentRelativeDirection = newRelativeDirection;
+        newRelativeDirection = FORWARD;
+        hasEnteredNextVoxel = true;
+        headAngle = 0.0f;
+    // Körper der Schlange weiterbewegen
+    } else if (elapsedTimeSinceLastMove > TIME_PER_MOVE) {
+        move();
+        elapsedTimeSinceLastMove = 0.0f;
+        hasEnteredNextVoxel = false;
+        headAngle = 0.0f;
+    }
 }
 
-void Snake::move(Direction direction) {
-    SnakePart oldHead = parts.front();
+void Snake::move() {
+     SnakePart oldHead = parts.front();
+    
     parts.pop_front();
 
     glm::ivec3 newPosition = oldHead.position + directionToVector(oldHead.forwardDirection);
@@ -225,17 +318,27 @@ void Snake::move(Direction direction) {
     if (raster->isOutOfBounds(newPosition)) {
         return;
     }
-        
+
     if (previousRelativeDirection == FORWARD) {
         oldHead.type = BODY;
     } else {
         oldHead.type = CORNER;
         oldHead.backwardDirection = invertDirection(parts.front().forwardDirection);
     }
-    parts.push_front(oldHead);
 
-    Direction newForwardDirection = relativeDirectionToAbsoluteDirection(oldHead.forwardDirection, currentRelativeDirection);
-    parts.push_front(SnakePart(TAIL, newPosition, newForwardDirection, invertDirection(newForwardDirection)));
+    parts.push_front(oldHead);
+    
+    Direction newForwardDirection = relativeDirectionToAbsoluteDirection(&oldHead, currentRelativeDirection);
+    SnakePart newHead(HEAD, newPosition, newForwardDirection, invertDirection(newForwardDirection), oldHead.upDirection);
+
+    if (currentRelativeDirection == UP) {
+        newHead.upDirection = invertDirection(oldHead.forwardDirection);
+        headUp = directionToVector(invertDirection(newHead.upDirection));
+    } else if (currentRelativeDirection == DOWN) {
+        newHead.upDirection = oldHead.forwardDirection;
+        headUp = directionToVector(newHead.upDirection);
+    }
+    parts.push_front(newHead);
 
     parts.pop_back();
     parts.back().type = TAIL;
@@ -243,17 +346,16 @@ void Snake::move(Direction direction) {
     headPosition = raster->getPosition(parts.front().position);
 }
 
+void Snake::navigate(RelativeDirection newDirection) {
+    newRelativeDirection = newDirection;
+}
+
 void Snake::createViewMatrix() {
     SnakePart head = parts.front();
     
-    glm::vec3 forward(directionToVector(head.forwardDirection));
-
-    glm::vec3 rotatedForward(glm::rotate(glm::mat4(1.0f), headAngle, headUp) * glm::vec4(forward, 1.0f));
-
     glm::vec3 eye = headPosition;
     eye += raster->getVoxelWidth() / 2.0f * headUp;
-    glm::vec3 correction = (-2.0f * raster->getVoxelWidth()) * rotatedForward;
-    eye += (-2.0f * raster->getVoxelWidth()) * rotatedForward;
+    eye += (-1.1f * raster->getVoxelWidth()) * headForward;
     
     glm::vec3 center = headPosition;
     center += raster->getVoxelWidth() / 2.0f * headUp;
@@ -281,7 +383,7 @@ void Snake::loadTexture() {
 
 void Snake::loadObjects() {
     viscg::GenMeshes(5, meshes);
-    //viscg::LoadObject(meshes[0], "objects/snakehead.obj");
+    viscg::LoadObject(meshes[0], "objects/snakehead.obj");
     viscg::LoadObject(meshes[1], "objects/snakebody.obj");
     viscg::LoadObject(meshes[2], "objects/snakecurve.obj");   
     viscg::LoadObject(meshes[3], "objects/snaketail.obj");
@@ -289,23 +391,80 @@ void Snake::loadObjects() {
 }
 
 glm::mat4 Snake::rotatePart(SnakePart* part) {
-    glm::mat4 rotationMatrix;
-    
+    glm::mat4 upRotation = glm::mat4(1.0f);
+    glm::mat4 forwardRotation = glm::mat4(1.0f);
+    glm::mat4 backwardRotation = glm::mat4(1.0f);
+
+
+    if (part->type != CORNER) {
+        switch (part->upDirection) {
+        case PosX:
+            if (part->forwardDirection == PosZ)
+                upRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+            else
+                upRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+            break;
+        case NegX:
+            upRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+            break;
+        case PosY:
+            if (part->forwardDirection == PosZ)
+                upRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+            break;
+        case NegY:
+            if (part->forwardDirection != PosZ)
+                upRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+            break;
+        case PosZ:
+            switch (part->forwardDirection) {
+            case PosX:
+                upRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            case NegX:
+                upRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            case NegY:
+                upRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            default:
+                break;
+            }
+            break;
+        case NegZ:
+            switch (part->forwardDirection) {
+            case PosX:
+                upRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            case NegX:
+                upRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            case PosY:
+                upRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        } 
+    }
+
     switch (part->forwardDirection) {
     case PosX:
-        rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        forwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         break;
     case NegX:
-        rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        forwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         break;
     case PosY:
-        rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        forwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         break;
     case NegY:
-        rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        forwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         break;
     case PosZ:
-        rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        forwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         break;
     default:
         break;
@@ -316,13 +475,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case PosX:
             switch (part->backwardDirection) {
             case PosY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break;
             case NegY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break;
             case NegZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break;
             default:
                 break;
@@ -331,13 +490,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case NegX:
             switch (part->backwardDirection) {
             case PosY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break;
             case NegY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break;
             case PosZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                 break; 
             default:
                 break;
@@ -346,13 +505,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case PosY:
             switch (part->backwardDirection) {
             case NegX:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             case PosZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             case NegZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             default:
                 break;
@@ -361,13 +520,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case NegY:
             switch (part->backwardDirection) {
             case NegX:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             case PosZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             case NegZ:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
                 break;
             default:
                 break;
@@ -376,13 +535,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case PosZ:
             switch (part->backwardDirection) {
             case NegX:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             case PosY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             case NegY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             default:
                 break;
@@ -391,13 +550,13 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
         case NegZ:
             switch (part->backwardDirection) {
             case NegX:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             case PosY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             case NegY:
-                rotationMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * rotationMatrix;
+                backwardRotation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             default:
                 break;
@@ -407,7 +566,7 @@ glm::mat4 Snake::rotatePart(SnakePart* part) {
             break;
         }
     }
-    return rotationMatrix;
+    return backwardRotation * forwardRotation * upRotation;
 }
 
 void Snake::drawMesh(Transformation transformation, glm::mat4 projectionMatrix, int mesh) {
@@ -466,14 +625,14 @@ Direction Snake::invertDirection(Direction direction) {
     }
 }
 
-Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, RelativeDirection relDir) {
+Direction Snake::relativeDirectionToAbsoluteDirection(SnakePart* part, RelativeDirection relDir) {
     switch (relDir) {
     case FORWARD:
-        return forward;
+        return part->forwardDirection;
     case LEFT:
-        switch (forward) {
+        switch (part->forwardDirection) {
         case PosX:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosY:
                 return NegZ;
             case NegY:
@@ -483,10 +642,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return NegY;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegX:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosY:
                 return PosZ;
             case NegY:
@@ -496,10 +655,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return PosY;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case PosY:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return PosZ;
             case NegX:
@@ -509,10 +668,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return PosX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegY:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return NegZ;
             case NegX:
@@ -522,10 +681,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return NegX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case PosZ:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return PosY;
             case NegX:
@@ -535,10 +694,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegY:
                 return NegX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegZ:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return PosY;
             case NegX:
@@ -548,16 +707,16 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegY:
                 return PosX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         default:
-            return forward;
+            return part->forwardDirection;
         }
-        return forward;
+        return part->forwardDirection;
     case RIGHT:
-        switch (forward) {
+        switch (part->forwardDirection) {
         case PosX:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosY:
                 return PosZ;
             case NegY:
@@ -567,10 +726,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return PosY;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegX:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosY:
                 return NegZ;
             case NegY:
@@ -580,10 +739,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return NegY;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case PosY:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return NegZ;
             case NegX:
@@ -593,10 +752,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return NegX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegY:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return PosZ;
             case NegX:
@@ -606,10 +765,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegZ:
                 return PosX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case PosZ:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return PosY;
             case NegX:
@@ -619,10 +778,10 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegY:
                 return PosX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         case NegZ:
-            switch (upDirection) {
+            switch (part->upDirection) {
             case PosX:
                 return NegY;
             case NegX:
@@ -632,18 +791,18 @@ Direction Snake::relativeDirectionToAbsoluteDirection(Direction forward, Relativ
             case NegY:
                 return NegX;
             default:
-                return forward;
+                return part->forwardDirection;
             }
         default:
-            return forward;
+            return part->forwardDirection;
         }
-        return forward;
+        return part->forwardDirection;
     case UP:
-        return upDirection;
+        return part->upDirection;
     case DOWN:
-        return invertDirection(upDirection);
+        return invertDirection(part->upDirection);
     default:
-        return forward;
+        return part->forwardDirection;
     }
 }
 
