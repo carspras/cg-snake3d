@@ -9,13 +9,18 @@ Raster::Raster(unsigned int width, unsigned int voxelsPerLine) {
     MVPLocation = glGetUniformLocation(programID, "MVP");
     colorLocation = glGetUniformLocation(programID, "color");
 
-    GLuint bufferIDs[4];
-    glGenBuffers(4, bufferIDs);
+    GLuint bufferIDs[9];
+    glGenBuffers(9, bufferIDs);
     
     rasterVBOID = bufferIDs[0];
     gridIBOID = bufferIDs[1];
-    wallIBOID = bufferIDs[2];
-    voxelIBOID = bufferIDs[3];
+    wallIBOIDs[0] = bufferIDs[2];
+    wallIBOIDs[1] = bufferIDs[3];
+    wallIBOIDs[2] = bufferIDs[4];
+    wallIBOIDs[3] = bufferIDs[5];
+    wallIBOIDs[4] = bufferIDs[6];
+    wallIBOIDs[5] = bufferIDs[7];
+    voxelIBOID = bufferIDs[8];
     hasChanged = true;
 
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, -1.0f));
@@ -64,66 +69,81 @@ Raster::Raster(unsigned int width, unsigned int voxelsPerLine) {
 
     // back wall
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1));
-        wallIndices.push_back(i * (voxelsPerLine+1) + voxelsPerLine);
+        wallIndices[0].push_back(i * (voxelsPerLine+1));
+        wallIndices[0].push_back(i * (voxelsPerLine+1) + voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i);
-        wallIndices.push_back(i + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[0].push_back(i);
+        wallIndices[0].push_back(i + (voxelsPerLine+1)*voxelsPerLine);
     }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[0]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[0].size() * sizeof(unsigned int), wallIndices[0].data(), GL_STATIC_DRAW);
 
     // front wall
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
-        wallIndices.push_back(i * (voxelsPerLine+1) + voxelsPerLine + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[1].push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[1].push_back(i * (voxelsPerLine+1) + voxelsPerLine + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
-        wallIndices.push_back(i + (voxelsPerLine+1)*voxelsPerLine + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[1].push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[1].push_back(i + (voxelsPerLine+1)*voxelsPerLine + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
     }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[1]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[1].size() * sizeof(unsigned int), wallIndices[1].data(), GL_STATIC_DRAW);
 
     // left wall
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1));
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[2].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1));
+        wallIndices[2].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1));
-        wallIndices.push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[2].push_back(i * (voxelsPerLine+1));
+        wallIndices[2].push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
     }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[2]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[2].size() * sizeof(unsigned int), wallIndices[2].data(), GL_STATIC_DRAW);
 
     // right wall
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine);
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine + voxelsPerLine);
+        wallIndices[3].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine);
+        wallIndices[3].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine + voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1) + voxelsPerLine);
-        wallIndices.push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine + voxelsPerLine);
+        wallIndices[3].push_back(i * (voxelsPerLine+1) + voxelsPerLine);
+        wallIndices[3].push_back(i * (voxelsPerLine+1) + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine + voxelsPerLine);
     }
     
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[3]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[3].size() * sizeof(unsigned int), wallIndices[3].data(), GL_STATIC_DRAW);
+
     // bottom
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1));
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine);
+        wallIndices[4].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1));
+        wallIndices[4].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i);
-        wallIndices.push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[4].push_back(i);
+        wallIndices[4].push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine);
     }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[4]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[4].size() * sizeof(unsigned int), wallIndices[4].data(), GL_STATIC_DRAW);
 
     // top
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine);
-        wallIndices.push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[5].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[5].push_back(i * (voxelsPerLine+1)*(voxelsPerLine+1) + voxelsPerLine + (voxelsPerLine+1)*voxelsPerLine);
     }
     for (unsigned int i = 0; i < voxelsPerLine+1; i++) {
-        wallIndices.push_back(i + (voxelsPerLine+1)*voxelsPerLine);
-        wallIndices.push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[5].push_back(i + (voxelsPerLine+1)*voxelsPerLine);
+        wallIndices[5].push_back(i + (voxelsPerLine+1)*(voxelsPerLine+1)*voxelsPerLine + (voxelsPerLine+1)*voxelsPerLine);
     }
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices.size() * sizeof(unsigned int), wallIndices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[5]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, wallIndices[5].size() * sizeof(unsigned int), wallIndices[5].data(), GL_STATIC_DRAW);
 }
 
 void Raster::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
@@ -139,11 +159,31 @@ void Raster::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
 
     // Gitter zeichnen    
     glBindBuffer(GL_ARRAY_BUFFER, rasterVBOID);
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOID);
-    glUniform4f(colorLocation, 0.5f, 0.0f, 0.0f, 1.0f);
-    glDrawElements(GL_LINES, wallIndices.size(), GL_UNSIGNED_INT, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[0]);
+    glUniform4f(colorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[1]);
+    glUniform4f(colorLocation, 1.0f, 0.5f, 0.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[2]);
+    glUniform4f(colorLocation, 1.0f, 1.0f, 0.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[3]);
+    glUniform4f(colorLocation, 0.0f, 1.0f, 0.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[4]);
+    glUniform4f(colorLocation, 0.0f, 1.0f, 1.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wallIBOIDs[5]);
+    glUniform4f(colorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
+    glDrawElements(GL_LINES, 4 * (voxelsPerLine+1), GL_UNSIGNED_INT, 0);                          
 
     /*
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -152,6 +192,7 @@ void Raster::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
     glDrawElements(GL_LINES, gridIndices.size(), GL_UNSIGNED_INT, 0);
     */
 
+    /*
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, voxelIBOID);
     // Die Indices für die Voxel müssen nur neu geladen werden, wenn sich an activatedVoxels etwas geändert hat
     // seit dem letzten Zeichnen
@@ -163,6 +204,7 @@ void Raster::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
     // aktivierte Voxel zeichnen
     glUniform4f(colorLocation, 0.0f, 0.5f, 0.5f, 0.0f);
     glDrawElements(GL_TRIANGLES, voxelIndices.size(), GL_UNSIGNED_INT, 0);
+    */
 }
 
 bool Raster::isOutOfBounds(glm::ivec3 voxel) {

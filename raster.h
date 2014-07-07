@@ -35,7 +35,7 @@ private:
     std::set<glm::ivec3, ivec3_compare> activatedVoxels;
     
     std::vector<unsigned int> gridIndices;
-    std::vector<unsigned int> wallIndices;
+    std::vector<unsigned int> wallIndices[6];
     std::vector<unsigned int> voxelIndices;
 
     glm::mat4 modelMatrix;
@@ -46,7 +46,7 @@ private:
     GLint colorLocation;
     GLuint rasterVBOID;
     GLuint gridIBOID;
-    GLuint wallIBOID;
+    GLuint wallIBOIDs[6];
     GLuint voxelIBOID;
     unsigned int width;
     unsigned int voxelsPerLine;
