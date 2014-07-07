@@ -290,7 +290,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
 
     // draw mouse
     transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), raster->getPosition(mouse.position))
-        * modelMatrix;
+        * glm::scale(glm::mat4(1.0f),glm::vec3(0.2f)) * modelMatrix;
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(mouseTextureTarget, mouseTextureID);
