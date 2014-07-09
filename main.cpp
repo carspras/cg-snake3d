@@ -30,7 +30,7 @@ void gameOver(Snake* snake) {
 
     if (input == "y") {
         snake->reset();
-        Sleep(5000);
+        Sleep(3000);
         return;
     } else if (input == "n") {
         exit(0);
@@ -40,7 +40,7 @@ void gameOver(Snake* snake) {
 
 int main(int argc, char** argv)
 {
-    if (!viscg::OpenWindow(wd, ht, "Snake3D", 4, 30, 30, true))
+    if (!viscg::OpenWindow(wd, ht, "Snake3D", 4, 250, 30, true))
     {
         std::cerr << "cannot create a window" << std::endl;
         exit(-1);
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
     std::cout << std::endl << "Press 'Enter' to start the game!";
     std::cin.get();
-    Sleep(5000);
+    Sleep(3000);
     
     // main rendering loop
     while(viscg::ProcessAllMesages()) { 

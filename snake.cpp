@@ -15,54 +15,8 @@ Snake::Snake(Raster* raster) {
 
     loadObjects();
     loadTexture();
-    
-    int center = static_cast<int>(raster->getVoxelsPerLine() / 2);
-    parts.push_back(SnakePart(HEAD, glm::ivec3(center, center, center), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(center, center, center+1), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(center, center, center+2), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(center, center, center+3), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(TAIL, glm::ivec3(center, center, center+4), NegZ, PosZ, PosY));
-    
-    /*
-    // Test-Schlange
-    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 4), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 4, 5), NegZ, PosZ, PosY));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 4, 6), NegZ, NegY, PosY));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 3, 6), PosY, NegY, PosZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(4, 2, 6), PosY, PosX, PosZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 6), NegX, PosX, PosZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 6), NegX, NegZ, PosZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 5), PosZ, NegZ, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 4), PosZ, NegZ, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 3), PosZ, NegZ, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 2), PosZ, NegZ, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(6, 2, 1), PosZ, NegZ, PosX));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(6, 2, 0), PosZ, NegX, PosX));
-    parts.push_back(SnakePart(BODY, glm::ivec3(5, 2, 0), PosX, NegX, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(4, 2, 0), PosX, NegX, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(3, 2, 0), PosX, NegX, NegZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 2, 0), PosX, PosY, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(2, 3, 0), NegY, PosY, NegZ));
-    parts.push_back(SnakePart(CORNER, glm::ivec3(2, 4, 0), NegY, PosX, NegZ));
-    parts.push_back(SnakePart(BODY, glm::ivec3(3, 4, 0), NegX, PosX, NegZ));
-    parts.push_back(SnakePart(TAIL, glm::ivec3(4, 4, 0), NegX, PosX, NegZ));
-    */
 
-    rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-    headPosition = raster->getPosition(parts.front().position);
-    headForward = glm::vec3(directionToVector(parts.front().forwardDirection));
-    headUp = glm::vec3(directionToVector(parts.front().upDirection));
-    headAngle = 0.0f;
-    hasEnteredNextVoxel = false;
-    newRelativeDirection = FORWARD;
-    currentRelativeDirection = FORWARD;
-    previousRelativeDirection = FORWARD;
-    elapsedTimeSinceLastMove = 0.0f;
-
-    score = 0;
-    moves = 0;
-    isGameOver = NOT_OVER;
-	SetMouseRandomly();
+    reset();
 }
 
 void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
@@ -84,13 +38,13 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     glm::mat4 headRotation(1.0f);
     float cos = 0.0f;
 
-    if (elapsedTimeSinceLastMove <= 0.5f * TIME_PER_MOVE) {
+    if (elapsedTimeSinceLastMove <= 0.5f * timePerMove) {
         switch (currentRelativeDirection) {
         case FORWARD:
             transformation.ModelViewMatrix = rotatePart(&head) * transformation.ModelViewMatrix;
 
             headPosition = raster->getPosition(head.position);
-            headPosition += raster->getVoxelWidth() * static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE) 
+            headPosition += raster->getVoxelWidth() * static_cast<float>(elapsedTimeSinceLastMove / timePerMove) 
                 * glm::vec3(directionToVector(head.forwardDirection));
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
@@ -98,7 +52,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case LEFT:
-            headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
 
@@ -115,7 +69,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case RIGHT:
-            headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
 
@@ -133,7 +87,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case UP:
-            headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 90 * (0.5f - static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
 
@@ -150,7 +104,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
                 * transformation.ModelViewMatrix;
             break;
         case DOWN:
-            headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 270 + 90 * (0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>(0.5 * (1 - glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth();
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle)))) * raster->getVoxelWidth();
 
@@ -175,7 +129,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             transformation.ModelViewMatrix = rotatePart(&head) * transformation.ModelViewMatrix;
 
             headPosition = raster->getPosition(head.position);
-            headPosition += raster->getVoxelWidth() * static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE) 
+            headPosition += raster->getVoxelWidth() * static_cast<float>(elapsedTimeSinceLastMove / timePerMove) 
                 * glm::vec3(directionToVector(head.forwardDirection));
             transformation.ModelViewMatrix = glm::translate(glm::mat4(1.0f), headPosition)
                 * transformation.ModelViewMatrix;
@@ -183,7 +137,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case LEFT:
-            headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>((0.5 * (1 + glm::sin(glm::radians(headAngle)))) * raster->getVoxelWidth());
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
 
@@ -200,7 +154,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case RIGHT:
-            headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>((0.5 * (1 + glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth());
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
 
@@ -217,7 +171,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
             rotationAxis = headUp;
             break;
         case UP:
-            headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 360 - 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>((0.5 * (1 + glm::abs(glm::sin(glm::radians(headAngle))))) * raster->getVoxelWidth());
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
 
@@ -234,7 +188,7 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
                 * transformation.ModelViewMatrix;
             break;
         case DOWN:
-            headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / TIME_PER_MOVE));
+            headAngle = 90 * (-0.5f + static_cast<float>(elapsedTimeSinceLastMove / timePerMove));
             forwardCorrection = static_cast<float>((0.5 * (1 + glm::sin(glm::radians(headAngle)))) * raster->getVoxelWidth());
             sideCorrection = static_cast<float>(0.5 * (1 - glm::cos(glm::radians(headAngle))) * raster->getVoxelWidth());
 
@@ -298,14 +252,14 @@ void Snake::draw(glm::mat4 projectionMatrix, double elapsedTime) {
     drawMesh(transformation, projectionMatrix, 4);
 
     // Betreten des nächsten Voxels
-    if (!hasEnteredNextVoxel && elapsedTimeSinceLastMove > 0.5f * TIME_PER_MOVE) {
+    if (!hasEnteredNextVoxel && elapsedTimeSinceLastMove > 0.5f * timePerMove) {
         previousRelativeDirection = currentRelativeDirection;
         currentRelativeDirection = newRelativeDirection;
         newRelativeDirection = FORWARD;
         hasEnteredNextVoxel = true;
         headAngle = 0.0f;
     // Körper der Schlange weiterbewegen
-    } else if (elapsedTimeSinceLastMove > TIME_PER_MOVE) {
+    } else if (elapsedTimeSinceLastMove > timePerMove) {
         move();
         elapsedTimeSinceLastMove = 0.0f;
         hasEnteredNextVoxel = false;
@@ -348,6 +302,7 @@ void Snake::reset() {
     score = 0;
     moves = 0;
     isGameOver = NOT_OVER;
+    timePerMove = 1.0f;
 }
 
 void Snake::move() {
@@ -370,11 +325,12 @@ void Snake::move() {
     bool hasEaten = false;
     // testen ob Schlange die Maus frisst
     if (newPosition == mouse.position) {
-            eat();
+        eat();
         hasEaten = true;
     }
 
-    // alten Schwanz enfernen und letztes Element der Schlange in Schwanz umwandeln   
+    // alten Schwanz enfernen und letztes Element der Schlange in Schwanz umwandeln
+    // wenn die Schlange gerade gefressen hat, passiert das nicht, damit die Schlange um eins länger wird
     if (!hasEaten) {
         parts.pop_back();
         parts.back().type = TAIL;
@@ -453,6 +409,10 @@ void Snake::loadObjects() {
 
 void Snake::eat() {
     score++;
+
+    if (timePerMove > 0.5f && (score % 2) == 0)
+        timePerMove -= 0.1f;
+    
     SetMouseRandomly();
 }
 
@@ -756,9 +716,9 @@ Direction Snake::relativeDirectionToAbsoluteDirection(SnakePart* part, RelativeD
         case PosZ:
             switch (part->upDirection) {
             case PosX:
-                return PosY;
-            case NegX:
                 return NegY;
+            case NegX:
+                return PosY;
             case PosY:
                 return PosX;
             case NegY:

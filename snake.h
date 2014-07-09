@@ -6,12 +6,6 @@
 #include "mouse.h"
 #include <deque>
 
-/**
-* Time in seconds it takes the snake to move one voxel forward.
-*/
-const double TIME_PER_MOVE = 1.0f;
-
-
 struct Transformation {
     glm::mat4 ModelViewMatrix;
     glm::mat4 ProjectionMatrix;
@@ -68,21 +62,15 @@ class Snake {
 public:
     Snake(Raster* raster);
 
-    /**
-    *   Draws the snake and the mouse
-    */
+    // Draws the snake and the mouse
     void draw(glm::mat4 projectionMatrix, double elapsedTime);
 
-    /**
-    *   true if the snake has run into a wall
-    */
+    // checks if the game is over and returns the appropiate condition
     GameOverCondition gameOver();
     unsigned int getScore();
     unsigned int getMoves();
 
-    /**
-    *   resets all variables of the snake to the initial states
-    */
+    //  resets all variables of the snake to the initial states
     void reset();
 
     /**
@@ -100,9 +88,7 @@ public:
     */
     glm::mat4 getViewMatrix();
 
-	/**
-	*	sets mouse position new at a random point
-	*/
+	// sets mouse position new at a random point
 	void Snake::SetMouseRandomly();
 
 private:
@@ -112,54 +98,55 @@ private:
     // moves the snake completed since the start of the game
     unsigned int moves;
 
-    /**
-    *   true if the game is over because the snake has run into a wall.
-    */
+    // time (in seconds) it takes the snake to move one voxel forward.
+    double timePerMove;
+
+    //  the new direction for the next move of the snake
+    RelativeDirection newRelativeDirection;
+
+    // the direction for the current move of the snake
+    RelativeDirection currentRelativeDirection;
+
+    // is used during the move to calculate the type and orientation of the first element of the body
+    RelativeDirection previousRelativeDirection;
+
+    // true if the snake has entered the next voxel, false if the snake is still in the original voxel
+    bool hasEnteredNextVoxel;
+
+    // true if the game is over because the snake has run into a wall.
     GameOverCondition isGameOver;
     
-    /**
-    *   Parts of the snake. First part should be a head, last part a tail.
-    */
+    // Parts of the snake. First part should be a head, last part a tail.
     std::deque<SnakePart> parts;
+
+    // the food of the snake
+    Mouse mouse;
+
+    // time in seconds elapsed since the last call of move()
+    double elapsedTimeSinceLastMove;
+
+    // model-matrix to be used as a basis for all model-matrices.
+    glm::mat4 modelMatrix;
 
     // current view-matrix
     glm::mat4 viewMatrix;
-    glm::vec3 rotationAxis;
-
-    /**
-    *   Position of the head at the current frame.
-    */
+    
+    // position of the head at the current frame.
     glm::vec3 headPosition;
     glm::vec3 headForward;
 
     // current up-vector of the head
     glm::vec3 headUp;
 
+    // the current axis the head has to be rotated around
+    glm::vec3 rotationAxis;
+
     // current angle of the head from the original forward-direction
     float headAngle;
 
-    bool hasEnteredNextVoxel;
-
     Raster* raster;
-    Mouse mouse;
-
-    /**
-    *   model-matrix to be used as a basis for all model-matrices.
-    */
-    glm::mat4 modelMatrix;
-
-    /**
-    *   the new direction for the snake relative to current direction
-    */
-    RelativeDirection newRelativeDirection;
-    RelativeDirection currentRelativeDirection;
-    RelativeDirection previousRelativeDirection;
-
-    /**
-    *   time in seconds elapsed since the last call of move()
-    */
-    double elapsedTimeSinceLastMove;
-
+    
+    // rendering stuff
     GLuint programID;
     GLuint meshes[5];
     GLuint transformationsUBOID;
@@ -172,22 +159,16 @@ private:
     GLenum mouseTextureTarget;
     GLuint textureLocation;
 
-    /**
-    *   Loads the object-files for all body parts of the snake and the mouse
-    */
+    // Loads the object-files for all body parts of the snake and the mouse
     void loadObjects();
 
-    /**
-    *   Loads the textures for all snake parts and the mouse.
-    */
+    // Loads the textures for all snake parts and the mouse.
     void loadTexture();
 
     // snake eats the mouse, creates a new mouse at a random position and increases the score
     void eat();
 
-    /**
-	*   checks if any part of the snake body is at a given position
-	*/
+    // checks if any part of the snake body is at a given position
 	bool IsAtPosition(glm::ivec3 position);
 
     /**
@@ -197,29 +178,21 @@ private:
     glm::mat4 rotatePart(SnakePart* part);
     
     /**
-    *   Draws an instance of the mesh at the mesh-position of the meshes-array
-    *   with the transformation- and projection-matrix passed and the view current view-matrix
+    *   Draws an instance of the mesh at position mesh of the meshes-array
+    *   with the transformation- and projection-matrix passed and the current view-matrix
     */
     void drawMesh(Transformation transformation, glm::mat4 projectionMatrix, int mesh);
 
-    /**
-    *   converts the passed direction into a normalized vector
-    */
+    // converts the passed direction into a normalized vector
     glm::ivec3 directionToVector(Direction direction);
 
-    /**
-    *   Inverts the passed direction (PosX -> NegX etc.)
-    */
+    // Inverts the passed direction (PosX -> NegX etc.)
     Direction invertDirection(Direction direction);
 
-    /**
-    *   Calculates the absolute direction of the part with the relative direction given
-    */
+    // Calculates the absolute direction of the part with the relative direction given
     Direction relativeDirectionToAbsoluteDirection(SnakePart* part, RelativeDirection relDir);
 
-    /**
-    *   Calculates the new view matrix after the head of the snake has moved
-    */
+    //  Calculates the new view matrix after the head of the snake has moved
     void createViewMatrix();
 };
 
